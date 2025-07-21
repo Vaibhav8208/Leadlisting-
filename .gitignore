@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Logs
 logs
 *.log
@@ -22,3 +23,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+=======
+node_modules
+# Keep environment variables out of version control
+.env
+
+/src/generated/prisma
+>>>>>>> c4eb360 (Initial backend push)

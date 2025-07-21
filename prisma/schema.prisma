@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  name           String
+  email          String   @unique
+  phone          String
+  role           String
+  department     String
+  status         String
+  leadsAssigned  Int      @default(0)
+  leadsConverted Int      @default(0)
+  joinDate       DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Lead {
+  id               Int       @id @default(autoincrement())
+  companyName      String
+  email            String
+  contactPerson    String
+  phone            String
+  assignee         String
+  priority         String
+  status           String
+  notes            String?
+  nextFollowUpDate DateTime?
+  callLogs         CallLog[]
+}
+
+model CallLog {
+  id          Int      @id @default(autoincrement())
+  leadId      Int
+  name        String
+  email       String
+  phone       String
+  description String
+  createdAt   DateTime @default(now())
+  lead        Lead     @relation(fields: [leadId], references: [id])
+}
+
+model callHistory {
+  id           String   @id @default(cuid())
+  leadName     String
+  caller       String
+  callType     String
+  duration     String
+  outcome      String
+  date         DateTime @db.Date // Date-only (YYYY-MM-DD)
+  time         DateTime @db.Time // Time-only (HH:MM:SS)
+  notes        String?
+  nextAction   String?
+  nextFollowUp DateTime?
+}
