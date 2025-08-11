@@ -5,6 +5,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  password:string;
   phone: string;
   role: string;
   department: string;
@@ -19,7 +20,9 @@ export type NewUserPayload = Omit<User, 'id' | 'joinDate' | 'leadsAssigned' | 'l
 
 // Use your actual backend URL
 // const API_BASE_URL = 'http://localhost:5000';
-const API_BASE_URL = 'http://localhost:5000/api';
+// const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
 
 // Create a configured instance of axios
 const apiClient = axios.create({
@@ -67,28 +70,23 @@ export const addUser = async (userData: NewUserPayload): Promise<User> => {
  * @param userData The fields to update. Partial<User> means we can send only the changed fields.
  * @returns A promise that resolves to the updated User object from the backend.
  */
-export const updateUser = async (userId: number, userData: Partial<User>): Promise<User> => {
+export const updateUser = async (id: number, data: Partial<User>): Promise<User> => {
   try {
-    // We send a PUT request to the specific user's endpoint, e.g., /users/3
-    const response = await apiClient.put<User>(`/users/${userId}`, userData);
+    const response = await apiClient.put<User>(`/users/${id}`, data);
     return response.data;
-  } catch (error) {
-    console.error(`Error updating user ${userId}:`, error);
-    throw new Error('Failed to update the user on the server.');
+  } catch (error: any) {
+    console.error(`Error updating user ${id}:`, error.response?.data || error.message);
+    throw new Error('Failed to update user on the server.');
   }
 };
 
-/**
- * NEW: Sends a request to delete a user from the backend.
- * @param userId The ID of the user to delete.
- * @returns A promise that resolves when the deletion is successful.
- */
-export const deleteUser = async (userId: number): Promise<void> => {
-  try {
-    // We send a DELETE request to the specific user's endpoint, e.g., /users/3
-    await apiClient.delete(`/users/${userId}`);
-  } catch (error) {
-    console.error(`Error deleting user ${userId}:`, error);
-    throw new Error('Failed to delete the user on the server.');
+// userApi.ts
+export const deleteUser = async (id: number): Promise<void> => {
+  const res = await fetch(`http://localhost:5000/api/users/${id}`, {
+    method: 'DELETE'
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to delete user');
   }
 };

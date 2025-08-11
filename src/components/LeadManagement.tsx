@@ -12,14 +12,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search } from 'lucide-react';
 import { Lead, statuses } from '@/types/Lead';
 import { getAllLeads } from '@/api/leadApi';
+import { User, getUsers } from '@/api/userApi'; // Import user-related functions and types
 import { filterLeads } from '@/utils/leadUtils';
 import LeadForm from '@/components/LeadForm';
 import LeadTable from '@/components/LeadTable';
 import LeadDetailsDialog from '@/components/LeadDetailsDialog';
-import CallDialog from '@/components/CallDialog'; // Import CallDialog
+import CallDialog from '@/components/CallDialog';
 
 const LeadManagement = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [users, setUsers] = useState<User[]>([]); // State for users
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,18 +34,25 @@ const LeadManagement = () => {
   const [callLeadData, setCallLeadData] = useState<Lead | null>(null);
 
   useEffect(() => {
-    const fetchLeads = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getAllLeads();
-        setLeads(data);
+        const [leadsData, usersData] = await Promise.all([
+          getAllLeads(),
+          getUsers(),
+        ]);
+        setLeads(leadsData);
+        setUsers(usersData);
       } catch (error) {
-        console.error('Error fetching leads:', error);
+        console.error('Error fetching data:', error);
       }
     };
-    fetchLeads();
+    fetchData();
   }, []);
 
   const filteredLeads = filterLeads(leads, searchTerm, filterStatus);
+
+  // Filter users with the "Employee" role. [1, 2]
+  const employeeUsers = users.filter((user) => user.role === 'Employee');
 
   const handleEditLead = (lead: Lead) => {
     setEditingLead(lead);
@@ -56,7 +65,6 @@ const LeadManagement = () => {
     setEditingLead(null);
   };
 
-  // Open call dialog on Call button click
   const handleCallLead = (lead: Lead) => {
     setCallLeadData(lead);
     setIsCallDialogOpen(true);
@@ -81,10 +89,25 @@ const LeadManagement = () => {
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               {statuses.map((status) => (
                 <SelectItem key={status} value={status}>
                   {status.charAt(0).toUpperCase() + status.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {/* Assign To Dropdown */}
+          <Select>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Assign to" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Employees</SelectItem>
+              {employeeUsers.map((user) => (
+                <SelectItem key={user.id} value={user.id.toString()}>
+                  {user.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -116,7 +139,7 @@ const LeadManagement = () => {
         leads={filteredLeads}
         onViewLead={setSelectedLead}
         onEditLead={handleEditLead}
-        onCallLead={handleCallLead} // Pass call handler here
+        onCallLead={handleCallLead}
       />
 
       {/* View Lead Dialog */}
